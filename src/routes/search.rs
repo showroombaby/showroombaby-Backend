@@ -1,11 +1,23 @@
-use rocket::serde::json::Json;
+use actix_web::{get, web, Responder};
+use diesel::prelude::*;
 use crate::models::Offer;
-use crate::services::search_service::search_offers;
+use crate::schema::offers::dsl::*;
 use crate::db::establish_connection;
 
-#[get("/search?<query>")]
-pub fn search(query: String) -> Json<Vec<Offer>> {
+#[derive(Deserialize)]
+struct SearchParams {
+    query: String,
+}
+
+#[get("/search")]
+pub async fn search(params: web::Query<SearchParams>) -> impl Responder {
     let conn = establish_connection();
-    let results = search_offers(&query, &conn);
-    Json(results)
+    let query = &params.query;
+
+    let results = offers
+        .filter(title.like(format!("%{}%", query)))
+        .load::<Offer>(&conn)
+        .expect("Erreur lors du chargement des offres");
+
+    web::Json(results)
 }
