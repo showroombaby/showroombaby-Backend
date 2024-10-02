@@ -1,6 +1,6 @@
 use actix_cors::Cors;
 use actix_web::{get, web, App, HttpServer, Responder};
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 #[derive(Serialize)]
 struct Offer {
@@ -9,11 +9,17 @@ struct Offer {
     price: f64,
 }
 
+#[derive(Deserialize)]
+struct SearchParams {
+    query: String,
+}
+
 #[get("/search")]
-async fn search(_query: web::Query<String>) -> impl Responder {
+async fn search(params: web::Query<SearchParams>) -> impl Responder {
+    let query = &params.query;
     let offers = vec![Offer {
-        title: "Offre 1 exemple blabla".into(),
-        description: "Description 1".into(),
+        title: format!("Résultat pour {}", query),
+        description: "Description d'exemple".into(),
         price: 100.0,
     }];
     web::Json(offers)
